@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<script
+			src="https://code.jquery.com/jquery-3.6.0.min.js"
+			integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+			crossorigin="anonymous"
+		></script>
+		<script async="true" src="p5.js"></script>
+
+		<script defer>
+			const ws = new WebSocket("ws://localhost:3000");
+			let iframe;
+
+			ws.onopen = () => console.log("open");
+			ws.addEventListener("message", ({ data }) => {
+				const obj = JSON.parse(data);
+
+				switch (obj.action) {
+					case "setPlayer": {
+						setPlayerResponse(obj);
+						break;
+					}
+					case "roomJoined": {
+						roomJoined(obj);
+						break;
+					}
+					case "updateBar": {
+						iframe?.contentWindow?.updateBar?.(obj.data);
+						break;
+					}
+					case "bounce": {
+						iframe?.contentWindow?.onBounce?.(obj.data);
+						break;
+					}
+				}
+			});
+
+			function setPlayerResponse(data) {
+				if (!data.result) {
+					console.log("bad");
+					$("#setup").append(`Username invalido`);
+				} else {
+					console.log("ok");
+					$("#setup").append("<button onclick='autoJoin()'>Auto Join</button>");
+				}
+			}
+
+			function usernameChosen(username) {
+				ws.send(JSON.stringify({ action: "setPlayer", data: username }));
+			}
+
+			function autoJoin() {
+				ws.send(JSON.stringify({ action: "autoJoin" }));
+			}
+
+			function roomJoined({ data }) {
+				const f = $("<iframe src='sketch.html' style='width:99%;height:99%;border:0;margin:auto;'></iframe>");
+				const child = $(`<div style="display:flex;width:100%;height:100%;background-color:black;"></div>`);
+				child.append(f);
+				$("body").empty().append(child);
+				iframe = f[0];
+				iframe.contentWindow.playerMoved = updateBar;
+				iframe.contentWindow.bounce = bounce;
+				iframe.contentWindow.initialVel = data.vel.x;
+				iframe.contentWindow.lose = lose;
+				// setTimeout(() => iframe.contentWindow.playerMoved = updateBar, 1000)
+			}
+			const updateBar = (bar) => {
+				ws.send(JSON.stringify({ action: "updateBar", data: bar }));
+			};
+			const bounce = (data) => {
+				console.log("bounce sent", data);
+				ws.send(JSON.stringify({ action: "bounce", data }));
+			};
+			const lose = () => {
+				ws.send(JSON.stringify({ action: "lose" }));
+			};
+		</script>
+		<script>
+			function ready() {
+				usernameChosen(btoa(Math.random().toString()).substr(10, 5));
+				$("#username-input").keyup(function (e) {
+					if (event.which === 13) {
+						usernameChosen(e.target.value);
+					}
+				});
+			}
+		</script>
+	</head>
+	<body onload="ready()" style="width: 100vw; height: 100vh">
+		<div id="setup">
+			<form onsubmit="event.preventDefault()">
+				<input type="text" id="username-input" />
+			</form>
+		</div>
+		<main></main>
+	</body>
+</html>

@@ -1,4 +1,3 @@
-import { WebSocketServer } from "ws";
 import { logClients, logPlayers, p, s, getId, getIdFromUsername, containsPlayer, objectForEach } from "./utils.js";
 
 /*const server = new WebSocketServer({
@@ -9,7 +8,7 @@ const players = {};
 const rooms = {};
 let currentRoom = null;
 
-export default (server) =>
+export default (server) => {
 	server.on("connection", (ws) => {
 		ws.id = getId();
 		clients[ws.id] = ws;
@@ -20,12 +19,27 @@ export default (server) =>
 		ws.on("message", (d) => onMessage(d, ws));
 		ws.on("close", () => onClose(ws));
 	});
+};
 
 function onClose(ws) {
+	//try {
+	console.log("Socket disconnected!");
+	deleteRoom(ws.room, ws.id);
 	delete clients[ws.id];
 	delete players[ws.id];
-	console.log("Socket disconnected!");
+	//delete rooms[ws.room];
 	logClients(clients);
+	//} catch (e) {}
+}
+
+function deleteRoom(roomId, id) {
+	const room = rooms[roomId];
+	if (!room) return;
+	room.forEach((socketId) => {
+		const ws = clients[socketId];
+		ws?.send(s({ action: "close" }));
+		ws?.close();
+	});
 }
 
 /**
@@ -79,6 +93,7 @@ function setPlayer(data, ws) {
 const games = {};
 
 function startRoom(roomId) {
+	console.log(rooms);
 	const room = rooms[roomId];
 	const sockets = room.map((x) => clients[x]);
 	let vel = 1;
@@ -120,6 +135,7 @@ function bounce({ data }, ws) {
 		x.ws.send(s({ action: "bounce", data: newData }));
 	});
 }
+
 function lose(_, ws) {
 	const game = games[ws.room];
 	objectForEach(game.players, (_, x) => {

@@ -12,7 +12,7 @@ let ball = { pos: { x: 0.5, y: 0.5 }, dest: { x: Math.abs(window.initialVel - 1)
 let lineWidth, barHeight;
 // Speeds
 const barSpeed = 0.02;
-const timeToCross = 2000;
+const timeToCross = 1500;
 
 // Timing
 let lastBounce;

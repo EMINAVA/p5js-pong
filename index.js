@@ -2,8 +2,7 @@ import express from "express";
 import { WebSocketServer } from "ws";
 import app from "./app.js";
 
-const PORT = process.env.PORT || 5000
-
+const PORT = process.env.PORT || 3000;
 const expressApp = express();
 
 expressApp.use(express.static("public"));
@@ -17,9 +16,8 @@ const wsServer = new WebSocketServer({ noServer: true });
 // https://www.npmjs.com/package/ws#multiple-servers-sharing-a-single-https-server
 const server = expressApp.listen(PORT);
 server.on("upgrade", (request, socket, head) => {
-    wsServer.handleUpgrade(request, socket, head, (socket) => {
-        wsServer.emit("connection", socket, request);
-    });
+	wsServer.handleUpgrade(request, socket, head, (socket) => {
+		wsServer.emit("connection", socket, request);
+	});
 });
-
 app(wsServer);

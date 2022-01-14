@@ -7,7 +7,23 @@
 		<title>p5js Pong</title>
 
 		<script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+		<script
+			src="https://code.jquery.com/jquery-3.6.0.min.js"
+			integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+			crossorigin="anonymous"
+		></script>
 		<script src="sketch.js"></script>
+		<script>
+			function onLoad() {
+				const canvas = $("#defaultCanvas0");
+
+				if (canvas) {
+					canvas.trigger("click");
+					return;
+				}
+				setTimeout(onLoad(), 100);
+			}
+		</script>
 
 		<style>
 			* {
@@ -26,7 +42,7 @@
 			}
 		</style>
 	</head>
-	<body>
+	<body onload="onLoad()">
 		<main></main>
 	</body>
 </html>
